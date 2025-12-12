@@ -14,7 +14,7 @@ router.delete("/delete/:username", auth, deleteUser);
 // Protected route to get user profile
 router.get('/profile/:username',auth, getUserProfileByUsername);
 // routes/user.js
-router.put('/profile/:username', auth, updateUserProfile);
+router.put('/profile/:username', auth,upload.single("avatar"), updateUserProfile);
 
 
 module.exports = router;
