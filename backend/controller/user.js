@@ -97,50 +97,26 @@ exports.getUserProfileByUsername = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
   try {
     const usernameParam = req.params.username;
-    const { username, email, password } = req.body;
-
-    // Security check
+    const {username,email, password } = req.body;
+    
     if (req.user.username !== usernameParam) {
-      return res.status(403).json({ message: "Unauthorized user" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    let user = await User.findOne({ username: usernameParam });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Update profile photo
-    if (req.file) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "profile_photos" },
-          (err, data) => err ? reject(err) : resolve(data)
-        ).end(req.file.buffer);
-      });
-
-      user.profilePic = uploadResult.secure_url;
+    let user=await User.findOne({username:usernameParam});
+    if(!user){
+      return res.status(404).json({message:"User not found"});
     }
 
     if (username) user.username = username;
-    if (email) user.email = email;
-    if (password) user.password = password;
-
+    if (email)user.email=email;
+    if(password)user.password=password;
     await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        profilePic: user.profilePic
-      }
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(200).json({message:"Profile updated successfully", user});
+  } catch (error){
+    res.status(500).json({message:"server error", error:error.message});
   }
 };
-
 exports.uploadProfilePic = async (req, res) => {
   try {
     if (!req.file) {
