@@ -7,36 +7,26 @@ const User = require('../module/usermodule');
 
 exports.createInstagramPost = async (req, res) => {
   try {
-    const { caption,title } = req.body;
+    const { title, caption } = req.body;
+    if (!req.file) return res.status(400).json({ message: "Image is required" });
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Image is required" });
-    }
-
-    // Cloudinary upload manually
-    const result = await cloudinary.uploader.upload_stream(
+    // Upload file buffer to Cloudinary
+    cloudinary.uploader.upload_stream(
       { folder: "posts" },
-      async (error, uploadResult) => {
-        if (error) return res.status(500).json({ error });
+      async (error, result) => {
+        if (error) return res.status(500).json({ message: error.message });
 
         const post = await Post.create({
-         title,
-         caption,
-         image: uploadResult.secure_url,
-         username: req.user.username,
-         author: req.user._id,
+          title,
+          caption,
+          image: result.secure_url,
+          username: req.user.username,
+          author: req.user._id,
         });
 
-        res.status(200).json({
-          success: true,
-          message: "Post created",
-          post,
-        });
+        res.status(200).json({ success: true, message: "Post created!", post });
       }
-    );
-
-    result.end(req.file.buffer); // memoryStorage file ko upload karo
-
+    ).end(req.file.buffer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
