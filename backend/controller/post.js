@@ -204,29 +204,29 @@ exports.unlikePost = async (req, res) => {
 exports.addComment = async (req, res) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug });
-
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (!req.body.text) {
+    if (!req.body.text)
       return res.status(400).json({ message: "Comment text required" });
-    }
-
-    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
 
     const newComment = {
-      user: req.user._id,
-      username: req.user.username,
+      user: req.user._id, // store ObjectId
       text: req.body.text,
     };
 
     post.comments.push(newComment);
     await post.save();
 
+    // Populate the user before sending response
+    const populatedPost = await Post.findById(post._id).populate(
+      "comments.user",
+      "username"
+    );
+
     res.status(201).json({
       message: "Comment added",
-      comment: newComment
+      comment: populatedPost.comments[populatedPost.comments.length - 1],
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
