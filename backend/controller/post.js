@@ -24,6 +24,9 @@ exports.createInstagramPost = async (req, res) => {
           author: req.user._id,
         });
 
+         // Add post to user's posts array
+    await User.findByIdAndUpdate(req.user._id, { $push: { posts: post._id } });
+
         res.status(200).json({ success: true, message: "Post created!", post });
       }
     ).end(req.file.buffer);
