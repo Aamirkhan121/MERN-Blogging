@@ -153,6 +153,8 @@ exports.likePost = async (req, res) => {
 
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
+
     // If already liked → return
     if (post.likes.includes(req.user._id)) {
       return res.status(400).json({ message: "Already liked the post" });
@@ -178,6 +180,8 @@ exports.unlikePost = async (req, res) => {
     const post = await Post.findOne({ slug: req.params.slug });
 
     if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
 
     post.likes = post.likes.filter(
       id => id.toString() !== req.user._id.toString()
@@ -206,6 +210,8 @@ exports.addComment = async (req, res) => {
     if (!req.body.text) {
       return res.status(400).json({ message: "Comment text required" });
     }
+
+    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
 
     const newComment = {
       user: req.user._id,
