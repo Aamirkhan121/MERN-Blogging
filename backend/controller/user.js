@@ -68,6 +68,7 @@ exports.loginUser = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+         profilePic: user.profilePic || "",
       },
       token 
     });
@@ -81,7 +82,12 @@ exports.getUserProfileByUsername = async (req, res) => {
   try {
     const username = req.params.username;
 
-    const user = await User.findOne({ username }).select('-password -__v');
+    const user = await User.findOne({ username })
+      .select('-password -__v')
+      .populate({
+        path: 'posts', // User schema me ensure karo: posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }]
+        populate: { path: 'author', select: 'username profilePic' } // post ke author details
+      });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -117,8 +123,6 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({message:"server error", error:error.message});
   }
 };
-
-
 exports.uploadProfilePic = async (req, res) => {
   try {
     if (!req.file) {
@@ -186,4 +190,3 @@ exports.deleteUser=async(req,res)=>{
     res.status(500).json({message:"server error", error:error.message});
   }
 }
-

@@ -7,36 +7,29 @@ const User = require('../module/usermodule');
 
 exports.createInstagramPost = async (req, res) => {
   try {
-    const { caption,title } = req.body;
+    const { title, caption } = req.body;
+    if (!req.file) return res.status(400).json({ message: "Image is required" });
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Image is required" });
-    }
-
-    // Cloudinary upload manually
-    const result = await cloudinary.uploader.upload_stream(
+    // Upload file buffer to Cloudinary
+    cloudinary.uploader.upload_stream(
       { folder: "posts" },
-      async (error, uploadResult) => {
-        if (error) return res.status(500).json({ error });
+      async (error, result) => {
+        if (error) return res.status(500).json({ message: error.message });
 
         const post = await Post.create({
-         title,
-         caption,
-         image: uploadResult.secure_url,
-         username: req.user.username,
-         author: req.user._id,
+          title,
+          caption,
+          image: result.secure_url,
+          username: req.user.username,
+          author: req.user._id,
         });
 
-        res.status(200).json({
-          success: true,
-          message: "Post created",
-          post,
-        });
+         // Add post to user's posts array
+    await User.findByIdAndUpdate(req.user._id, { $push: { posts: post._id } });
+
+        res.status(200).json({ success: true, message: "Post created!", post });
       }
-    );
-
-    result.end(req.file.buffer); // memoryStorage file ko upload karo
-
+    ).end(req.file.buffer);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -45,7 +38,9 @@ exports.createInstagramPost = async (req, res) => {
 // Get all posts
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('author', 'username');
+        const posts = await Post.find()
+            .populate('author', 'username profilePic')           
+            .populate('comments.user', 'username profilePic');
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching posts', error });
@@ -55,7 +50,9 @@ exports.getAllPosts = async (req, res) => {
 //get post by id
 exports.getPostBySlug = async (req, res) => {
     try {
-        const post = await Post.findOne({ slug: req.params.slug }).populate('author', 'username');
+          const post = await Post.findOne({ slug: req.params.slug })
+            .populate('author', 'username profilePic')           // author info
+            .populate('comments.user', 'username profilePic')
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
@@ -163,6 +160,8 @@ exports.likePost = async (req, res) => {
 
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
+
     // If already liked → return
     if (post.likes.includes(req.user._id)) {
       return res.status(400).json({ message: "Already liked the post" });
@@ -189,6 +188,8 @@ exports.unlikePost = async (req, res) => {
 
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    const userId = req.user.id || req.user._id; // 🔥 SAFE FIX
+
     post.likes = post.likes.filter(
       id => id.toString() !== req.user._id.toString()
     );
@@ -210,27 +211,29 @@ exports.unlikePost = async (req, res) => {
 exports.addComment = async (req, res) => {
   try {
     const post = await Post.findOne({ slug: req.params.slug });
-
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    if (!req.body.text) {
+    if (!req.body.text)
       return res.status(400).json({ message: "Comment text required" });
-    }
 
     const newComment = {
-      user: req.user._id,
-      username: req.user.username,
+      user: req.user._id, // store ObjectId
       text: req.body.text,
     };
 
     post.comments.push(newComment);
     await post.save();
 
+    // Populate the user before sending response
+    const populatedPost = await Post.findById(post._id).populate(
+      "comments.user",
+      "username"
+    );
+
     res.status(201).json({
       message: "Comment added",
-      comment: newComment
+      comment: populatedPost.comments[populatedPost.comments.length - 1],
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -286,4 +289,3 @@ exports.deleteComment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
