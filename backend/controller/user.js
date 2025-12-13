@@ -82,7 +82,12 @@ exports.getUserProfileByUsername = async (req, res) => {
   try {
     const username = req.params.username;
 
-    const user = await User.findOne({ username }).select('-password -__v');
+    const user = await User.findOne({ username })
+      .select('-password -__v')
+      .populate({
+        path: 'posts', // User schema me ensure karo: posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }]
+        populate: { path: 'author', select: 'username profilePic' } // post ke author details
+      });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
