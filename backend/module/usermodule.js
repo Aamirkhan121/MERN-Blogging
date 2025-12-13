@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     profilePic: { type: String, default: "" },
     role:{type:String, default:'author'}, // admin / author / reader
+    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 }, { timestamps: true });
 
 // Hash password before saving
