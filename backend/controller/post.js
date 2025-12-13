@@ -35,7 +35,9 @@ exports.createInstagramPost = async (req, res) => {
 // Get all posts
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().populate('author', 'username');
+        const posts = await Post.find()
+            .populate('author', 'username profilePic')           
+            .populate('comments.user', 'username profilePic');
         res.status(200).json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching posts', error });
@@ -45,7 +47,9 @@ exports.getAllPosts = async (req, res) => {
 //get post by id
 exports.getPostBySlug = async (req, res) => {
     try {
-        const post = await Post.findOne({ slug: req.params.slug }).populate('author', 'username');
+          const post = await Post.findOne({ slug: req.params.slug })
+            .populate('author', 'username profilePic')           // author info
+            .populate('comments.user', 'username profilePic')
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
