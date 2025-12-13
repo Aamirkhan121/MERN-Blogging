@@ -7,6 +7,8 @@ import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import SinglePost from "./pages/SinglePost";
 import ProfilePage from "./components/ProfilePage";
+import PublicRoute from "./components/PublicRoute";
+import ProtectedRoute from "./components/ProtectRoute";
 
 
 function App() {
@@ -14,13 +16,15 @@ function App() {
     <BrowserRouter>
     <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/create-post" element={<CreatePost />} />
-        <Route path="/post/:slug" element={<SinglePost />} />
-        <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="/" element={<ProtectedRoute> <Home /> </ProtectedRoute> } />
+         
+        {/* PUBLIC */}
+        <Route path="/login" element={<PublicRoute> <Login />  </PublicRoute>}/>
+        <Route path="/register" element={<PublicRoute> <Register />  </PublicRoute> } />
+        <Route path="/profile" element={<ProtectedRoute> <Profile /> </ProtectedRoute> } />
+        <Route path="/create-post" element={<ProtectedRoute> <CreatePost/>  </ProtectedRoute> } />
+        <Route path="/post/:slug" element={<ProtectedRoute> <SinglePost /> </ProtectedRoute> } />
+        <Route path="/profile/:username" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute> } />
       </Routes>
     </BrowserRouter>
   );

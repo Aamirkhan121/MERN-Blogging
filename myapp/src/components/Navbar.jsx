@@ -30,9 +30,9 @@ export default function Navbar() {
             <Link to="/" className="text-gray-700 hover:text-green-600">
               Home
             </Link>
-            <Link to="/dashboard" className="text-gray-700 hover:text-green-600">
+            {/* <Link to="/dashboard" className="text-gray-700 hover:text-green-600">
               Dashboard
-            </Link>
+            </Link> */}
 
             {user && (
               <Link
