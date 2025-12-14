@@ -8,6 +8,12 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     profilePic: { type: String, default: "" },
     role:{type:String, default:'author'}, // admin / author / reader
+    followers: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  ],
+  following: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  ],
     posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 }, { timestamps: true });
 
@@ -24,7 +30,7 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 };
 // Method to generate JWT
 userSchema.methods.generateToken = function() {
-    return jwt.sign({ id: this._id }, process.env.JWT_SECRET_TOKEN, { expiresIn: '1h' });
+    return jwt.sign({ id: this._id }, process.env.JWT_SECRET_TOKEN, { expiresIn: '60d' });
 };
 const User= mongoose.model('User', userSchema);
 module.exports=User;

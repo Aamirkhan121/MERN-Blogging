@@ -4,17 +4,19 @@ import axios from "../utils/instance";
 import { toast } from "react-toastify";
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const loggedUser = JSON.parse(localStorage.getItem("user"));
   const { username } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const loggedUser = JSON.parse(localStorage.getItem("user"));
-  const navigate = useNavigate();
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await axios.get(`/users/profile/${username}`);
         setUser(res.data.user);
+        console.log(res.data.user)
       } catch (err) {
         toast.error(err.response?.data?.message || "User not found");
       } finally {
@@ -28,6 +30,38 @@ export default function ProfilePage() {
   if (!user) return <p className="text-center mt-20">User not found</p>;
 
   const isOwnProfile = loggedUser?._id === user._id;
+
+  const isFollowing = user.followers?.some(
+    (f) => f._id === loggedUser?._id
+  );
+
+  // 🔹 Follow
+  const handleFollow = async () => {
+    try {
+      setFollowLoading(true);
+      const res = await axios.put(`/users/follow/${username}`);
+      setUser(res.data.user);
+      toast.success("Followed successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Follow failed");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  // 🔹 Unfollow
+  const handleUnfollow = async () => {
+    try {
+      setFollowLoading(true);
+      const res = await axios.put(`/users/unfollow/${username}`);
+      setUser(res.data.user);
+      toast.success("Unfollowed successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Unfollow failed");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto p-4">
@@ -44,6 +78,27 @@ export default function ProfilePage() {
         <div className="flex-1 flex flex-col md:justify-center gap-2">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl md:text-3xl font-bold">{user.username}</h1>
+
+          
+            {/* 🔥 FOLLOW / UNFOLLOW */}
+            {loggedUser && !isOwnProfile && (
+              <button
+                disabled={followLoading}
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                className={`px-5 py-2 rounded-md text-white font-medium ${
+                  isFollowing
+                    ? "bg-gray-500 hover:bg-gray-600"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {followLoading
+                  ? "Please wait..."
+                  : isFollowing
+                  ? "Unfollow"
+                  : "Follow"}
+              </button>
+            )}
+
             {isOwnProfile && (
               <button
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
@@ -70,7 +125,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* POSTS GRID */}
+      {/* ================= POSTS GRID ================= */}
       {user.posts?.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {user.posts.map((post) => (

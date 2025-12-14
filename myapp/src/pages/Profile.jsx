@@ -1,148 +1,150 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "../utils/instance";
 import { toast } from "react-toastify";
 
 export default function Profile() {
-  // Stored user from localStorage
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const [user, setUser] = useState(storedUser);
+  const navigate = useNavigate();
+  const { username } = useParams();
 
-  const [form, setForm] = useState({
-    username: storedUser.username,
-    email: storedUser.email,
-  });
+  const loggedUser = JSON.parse(localStorage.getItem("user"));
 
-  const [photo, setPhoto] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState(storedUser.profilePic || "/default-profile.png");
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  // Update preview if user.profilePic changes
-  useEffect(() => {
-    setPreview(user?.profilePic || "/default-profile.png");
-  }, [user]);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
-    setPhoto(file);
-    if (file) setPreview(URL.createObjectURL(file));
-  };
-
-  // Update username/email
-  const updateProfile = async () => {
-    setLoading(true);
+  // 🔹 Get profile by username
+  const fetchProfile = async () => {
     try {
-      const res = await axios.put(`/users/profile/${user.username}`, form, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const res = await axios.get(`/users/profile/${username}`);
       setUser(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      toast.success("Profile updated successfully!");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
-    }
-    setLoading(false);
-  };
+      console.log(res.data.user)
 
-  // Upload profile picture
-  const uploadProfilePic = async () => {
-    if (!photo) return toast.error("Please select a photo");
-
-    const formData = new FormData();
-    formData.append("photo", photo);
-
-    setLoading(true);
-    try {
-      const res = await axios.put(
-        `/users/profile/upload-pic/${user.username}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      setIsFollowing(
+        res.data.user.followers.some(
+          (f) => f._id === loggedUser._id
+        )
       );
-
-      setUser(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      toast.success("Profile picture updated!");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Upload failed");
+      toast.error("Profile not found");
     }
-    setLoading(false);
   };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [username]);
+
+  // 🔹 Follow
+  const followUser = async () => {
+    try {
+      await axios.put(`/users/follow/${username}`);
+      toast.success("Followed");
+      fetchProfile();
+    } catch (err) {
+      toast.error("Follow failed");
+    }
+  };
+
+  // 🔹 Unfollow
+  const unfollowUser = async () => {
+    try {
+      await axios.put(`/users/unfollow/${username}`);
+      toast.success("Unfollowed");
+      fetchProfile();
+    } catch (err) {
+      toast.error("Unfollow failed");
+    }
+  };
+
+  if (!user) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
-
-      {/* Profile Picture */}
-      <div className="flex flex-col items-center gap-4 mb-6">
-        <div className="relative">
-          <img
-            src={preview}
-            alt="Profile"
-            className="w-32 h-32 rounded-full object-cover border-4 border-gray-300 shadow-lg"
-          />
-          <button
-            onClick={() => document.getElementById("fileInput").click()}
-            className="absolute bottom-2 right-2 bg-white border shadow p-2 rounded-full hover:bg-gray-100 transition"
-          >
-            📷
-          </button>
-        </div>
-        <input
-          id="fileInput"
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoChange}
-          className="hidden"
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col items-center gap-3">
+        <img
+          src={user.profilePic || "/default-profile.png"}
+          className="w-32 h-32 rounded-full object-cover border-4 border-green-500"
         />
-        <button
-          onClick={uploadProfilePic}
-          disabled={loading}
-          className={`w-full py-3 rounded-xl text-white font-medium shadow ${
-            loading ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
-          } transition-all`}
-        >
-          {loading ? "Uploading..." : "Upload Picture"}
-        </button>
+
+        <h2 className="text-xl font-bold">@{user.username}</h2>
+        <p className="text-gray-600">{user.email}</p>
+
+        {/* ================= FOLLOW BUTTON ================= */}
+        {loggedUser._id !== user._id && (
+          <button
+            onClick={isFollowing ? unfollowUser : followUser}
+            className={`px-6 py-2 rounded-full text-white font-medium ${
+              isFollowing
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+        )}
       </div>
 
-      {/* Username */}
-      <label className="font-medium">Username</label>
-      <input
-        name="username"
-        value={form.username}
-        onChange={handleChange}
-        className="w-full p-3 border rounded mb-4"
-      />
+      {/* ================= STATS ================= */}
+      <div className="flex justify-around text-center mt-6">
+        <div>
+          <p className="font-bold">{user.posts?.length || 0}</p>
+          <p className="text-sm text-gray-500">Posts</p>
+        </div>
+        <div>
+          <p className="font-bold">{user.followers.length}</p>
+          <p className="text-sm text-gray-500">Followers</p>
+        </div>
+        <div>
+          <p className="font-bold">{user.following.length}</p>
+          <p className="text-sm text-gray-500">Following</p>
+        </div>
+      </div>
 
-      {/* Email */}
-      <label className="font-medium">Email</label>
-      <input
-        name="email"
-        value={form.email}
-        onChange={handleChange}
-        className="w-full p-3 border rounded mb-4"
-      />
+      {/* ================= FOLLOWERS LIST ================= */}
+      <div className="mt-6">
+        <h3 className="font-semibold mb-2">Followers</h3>
+        {user.followers.length === 0 && (
+          <p className="text-sm text-gray-500">No followers yet</p>
+        )}
+        {user.followers.map((f) => (
+          <div
+            key={f._id}
+            onClick={() => navigate(`/profile/${f.username}`)}
+            className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer rounded"
+          >
+            <img
+              src={f.profilePic || "/default-profile.png"}
+              className="w-8 h-8 rounded-full"
+            />
+            <span>{f.username}</span>
+          </div>
+        ))}
+      </div>
 
-      {/* Update Button */}
-      <button
-        onClick={updateProfile}
-        disabled={loading}
-        className={`w-full py-3 rounded-xl mb-6 text-white font-medium ${
-          loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-        } transition-all shadow`}
-      >
-        {loading ? "Saving..." : "Update Profile"}
-      </button>
+      {/* ================= FOLLOWING LIST ================= */}
+      <div className="mt-6">
+        <h3 className="font-semibold mb-2">Following</h3>
+        {user.following.length === 0 && (
+          <p className="text-sm text-gray-500">Not following anyone</p>
+        )}
+        {user.following.map((f) => (
+          <div
+            key={f._id}
+            onClick={() => navigate(`/profile/${f.username}`)}
+            className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer rounded"
+          >
+            <img
+              src={f.profilePic || "/default-profile.png"}
+              className="w-8 h-8 rounded-full"
+            />
+            <span>{f.username}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
+
 
 

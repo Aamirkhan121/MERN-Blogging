@@ -87,7 +87,9 @@ exports.getUserProfileByUsername = async (req, res) => {
       .populate({
         path: 'posts', // User schema me ensure karo: posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }]
         populate: { path: 'author', select: 'username profilePic' } // post ke author details
-      });
+      })
+      .populate("followers", "username profilePic")
+      .populate("following", "username profilePic");
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -190,3 +192,54 @@ exports.deleteUser=async(req,res)=>{
     res.status(500).json({message:"server error", error:error.message});
   }
 }
+
+
+// follow user code 
+
+
+// FOLLOW USER
+exports.followUser = async (req, res) => {
+  try {
+    const userToFollow = await User.findById(req.params.id);
+    const loggedUser = await User.findById(req.user._id);
+
+    if (!userToFollow)
+      return res.status(404).json({ message: "User not found" });
+
+    if (loggedUser.following.includes(userToFollow._id))
+      return res.status(400).json({ message: "Already following" });
+
+    loggedUser.following.push(userToFollow._id);
+    userToFollow.followers.push(loggedUser._id);
+
+    await loggedUser.save();
+    await userToFollow.save();
+
+    res.status(200).json({ message: "User followed" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UNFOLLOW USER
+exports.unfollowUser = async (req, res) => {
+  try {
+    const userToUnfollow = await User.findById(req.params.id);
+    const loggedUser = await User.findById(req.user._id);
+
+    loggedUser.following = loggedUser.following.filter(
+      id => id.toString() !== userToUnfollow._id.toString()
+    );
+
+    userToUnfollow.followers = userToUnfollow.followers.filter(
+      id => id.toString() !== loggedUser._id.toString()
+    );
+
+    await loggedUser.save();
+    await userToUnfollow.save();
+
+    res.status(200).json({ message: "User unfollowed" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

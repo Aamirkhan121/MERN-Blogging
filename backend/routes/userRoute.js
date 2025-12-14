@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, getUserProfileByUsername, updateUserProfile, uploadProfilePic, deleteUser, } = require('../controller/user');
+const { registerUser, loginUser, getUserProfileByUsername, updateUserProfile, uploadProfilePic, deleteUser, followUser, unfollowUser, } = require('../controller/user');
 const auth = require('../middleware/auth');
 const postUpload = require('../middleware/postUpload');
 // const upload = require('../middleware/upload');
@@ -15,6 +15,11 @@ router.delete("/delete/:username", auth, deleteUser);
 router.get('/profile/:username',auth, getUserProfileByUsername);
 // routes/user.js
 router.put('/profile/:username', auth, updateUserProfile);
+
+// follow route
+router.put("/follow/:username", auth, followUser);
+router.put("/unfollow/:username", auth, unfollowUser);
+
 
 
 module.exports = router;

@@ -9,6 +9,7 @@ import SinglePost from "./pages/SinglePost";
 import ProfilePage from "./components/ProfilePage";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectRoute";
+import Footer from "./components/Footer";
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/post/:slug" element={<ProtectedRoute> <SinglePost /> </ProtectedRoute> } />
         <Route path="/profile/:username" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute> } />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
