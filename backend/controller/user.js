@@ -200,7 +200,7 @@ exports.deleteUser=async(req,res)=>{
 // FOLLOW USER
 exports.followUser = async (req, res) => {
   try {
-    const userToFollow = await User.findById(req.params.id);
+    const userToFollow = await User.findOne({ username: req.params.username });
     const loggedUser = await User.findById(req.user._id);
 
     if (!userToFollow)
@@ -215,7 +215,7 @@ exports.followUser = async (req, res) => {
     await loggedUser.save();
     await userToFollow.save();
 
-    res.status(200).json({ message: "User followed" });
+    res.status(200).json({ user: userToFollow, message: "User followed" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -224,8 +224,11 @@ exports.followUser = async (req, res) => {
 // UNFOLLOW USER
 exports.unfollowUser = async (req, res) => {
   try {
-    const userToUnfollow = await User.findById(req.params.id);
+    const userToUnfollow = await User.findOne({ username: req.params.username });
     const loggedUser = await User.findById(req.user._id);
+
+    if (!userToUnfollow)
+      return res.status(404).json({ message: "User not found" });
 
     loggedUser.following = loggedUser.following.filter(
       id => id.toString() !== userToUnfollow._id.toString()
@@ -238,7 +241,7 @@ exports.unfollowUser = async (req, res) => {
     await loggedUser.save();
     await userToUnfollow.save();
 
-    res.status(200).json({ message: "User unfollowed" });
+    res.status(200).json({ user: userToUnfollow, message: "User unfollowed" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -17,6 +17,9 @@ export default function ProfilePage() {
         const res = await axios.get(`/users/profile/${username}`);
         setUser(res.data.user);
         console.log(res.data.user)
+        console.log("Username param:", username);
+console.log("Logged user:", loggedUser);
+
       } catch (err) {
         toast.error(err.response?.data?.message || "User not found");
       } finally {
