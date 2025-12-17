@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "https://mern-blog-api-49y4.onrender.com/api",
+  // baseURL: "https://mern-blog-api-49y4.onrender.com/api",
+  baseURL: "http://localhost:2000/api",
 });
 
 // Auto attach token

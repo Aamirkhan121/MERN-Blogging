@@ -16,9 +16,9 @@ export default function ProfilePage() {
       try {
         const res = await axios.get(`/users/profile/${username}`);
         setUser(res.data.user);
-        console.log(res.data.user)
-        console.log("Username param:", username);
-console.log("Logged user:", loggedUser);
+//         console.log(res.data.user)
+//         console.log("Username param:", username);
+// console.log("Logged user:", loggedUser);
 
       } catch (err) {
         toast.error(err.response?.data?.message || "User not found");
@@ -83,24 +83,35 @@ console.log("Logged user:", loggedUser);
             <h1 className="text-2xl md:text-3xl font-bold">{user.username}</h1>
 
           
-            {/* 🔥 FOLLOW / UNFOLLOW */}
-            {loggedUser && !isOwnProfile && (
-              <button
-                disabled={followLoading}
-                onClick={isFollowing ? handleUnfollow : handleFollow}
-                className={`px-5 py-2 rounded-md text-white font-medium ${
-                  isFollowing
-                    ? "bg-gray-500 hover:bg-gray-600"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                {followLoading
-                  ? "Please wait..."
-                  : isFollowing
-                  ? "Unfollow"
-                  : "Follow"}
-              </button>
-            )}
+           {/* 🔥 FOLLOW / UNFOLLOW + MESSAGE */}
+{loggedUser && !isOwnProfile && (
+  <div className="flex gap-3">
+    <button
+      disabled={followLoading}
+      onClick={isFollowing ? handleUnfollow : handleFollow}
+      className={`px-5 py-2 rounded-md text-white font-medium ${
+        isFollowing
+          ? "bg-gray-500 hover:bg-gray-600"
+          : "bg-green-600 hover:bg-green-700"
+      }`}
+    >
+      {followLoading
+        ? "Please wait..."
+        : isFollowing
+        ? "Unfollow"
+        : "Follow"}
+    </button>
+
+    {/* 💬 MESSAGE BUTTON */}
+    <button
+      onClick={() => navigate(`/chat/${user.username}`)}
+      className="px-5 py-2 rounded-md border border-gray-400 text-gray-700 hover:bg-gray-100 font-medium"
+    >
+      Message
+    </button>
+  </div>
+)}
+
 
             {isOwnProfile && (
               <button
