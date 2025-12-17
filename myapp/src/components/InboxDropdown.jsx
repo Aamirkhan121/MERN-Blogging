@@ -27,32 +27,44 @@ export default function InboxDropdown() {
 
   // Real-time update (socket)
   useEffect(() => {
-    if (!user) return;
+  if (!user) return;
 
-    const handleNewMessage = (msg) => {
-      const myId = user._id;
-      const otherUser =
-        msg.sender._id === myId ? msg.receiver : msg.sender;
+  const updateInbox = (msg) => {
+    const myId = user._id;
 
-      setInbox((prev) => {
-        const filtered = prev.filter(
-          (chat) => chat._id._id !== otherUser._id
-        );
+    // Find other user (chat partner)
+    const otherUser =
+      msg.sender._id === myId ? msg.receiver : msg.sender;
 
-        return [
-          {
-            _id: otherUser,
-            lastMessage: msg,
-          },
-          ...filtered,
-        ];
-      });
-    };
+    setInbox((prev) => {
+      // Remove old entry if exists
+      const filtered = prev.filter(
+        (chat) => chat._id._id !== otherUser._id
+      );
 
-    socket.on("newMessage", handleNewMessage);
+      // Add updated chat on top
+      return [
+        {
+          _id: otherUser,       // user object
+          lastMessage: msg,
+        },
+        ...filtered,
+      ];
+    });
+  };
 
-    return () => socket.off("newMessage", handleNewMessage);
-  }, [user]);
+  // 🔥 Receiver
+  socket.on("newMessage", updateInbox);
+
+  // 🔥 Sender (instant update)
+  socket.on("messageSent", updateInbox);
+
+  return () => {
+    socket.off("newMessage", updateInbox);
+    socket.off("messageSent", updateInbox);
+  };
+}, [user]);
+
 
   if (!user) return null;
 

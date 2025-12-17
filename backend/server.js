@@ -71,6 +71,8 @@ io.on("connection", (socket) => {
         text,
       });
 
+      await message.populate("sender receiver", "username profilePic");
+
       // Emit to receiver
       const receiverSocket = onlineUsers.get(receiverId);
       if (receiverSocket) {
@@ -78,7 +80,7 @@ io.on("connection", (socket) => {
       }
 
       // Ack to sender
-socket.emit("newMessage", message);
+socket.emit("messageSent", message);
     } catch (error) {
       console.error("Error sending message:", error.message);
     }
