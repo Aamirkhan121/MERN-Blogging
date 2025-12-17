@@ -32,38 +32,45 @@ export default function InboxDropdown() {
   const updateInbox = (msg) => {
     const myId = user._id;
 
-    // Find other user (chat partner)
-    const otherUser =
-      msg.sender._id === myId ? msg.receiver : msg.sender;
+    // Identify chat partner
+    const otherUser = msg.sender._id === myId ? msg.receiver : msg.sender;
 
     setInbox((prev) => {
-      // Remove old entry if exists
-      const filtered = prev.filter(
-        (chat) => chat._id._id !== otherUser._id
+      // Check if chat with this user already exists
+      const existingIndex = prev.findIndex(
+        (chat) => chat._id._id === otherUser._id
       );
 
-      // Add updated chat on top
-      return [
-        {
-          _id: otherUser,       // user object
+      if (existingIndex !== -1) {
+        // Update last message & move to top
+        const updated = [...prev];
+        updated.splice(existingIndex, 1); // remove old
+        updated.unshift({
+          _id: otherUser,
           lastMessage: msg,
-        },
-        ...filtered,
-      ];
+        });
+        return updated;
+      } else {
+        // New chat → just add on top
+        return [
+          {
+            _id: otherUser,
+            lastMessage: msg,
+          },
+          ...prev,
+        ];
+      }
     });
   };
 
-  // 🔥 Receiver
+  // ✅ Single event for both sender & receiver
   socket.on("newMessage", updateInbox);
-
-  // 🔥 Sender (instant update)
-  socket.on("messageSent", updateInbox);
 
   return () => {
     socket.off("newMessage", updateInbox);
-    socket.off("messageSent", updateInbox);
   };
 }, [user]);
+
 
 
   if (!user) return null;

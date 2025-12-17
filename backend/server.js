@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
       }
 
       // Ack to sender
-socket.emit("messageSent", message);
+socket.emit("newMessage", message);
     } catch (error) {
       console.error("Error sending message:", error.message);
     }
