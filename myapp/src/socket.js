@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:2000", {
+const socket = io("https://mern-blog-api-49y4.onrender.com", {
   auth: {
     token: localStorage.getItem("token"),
   },
