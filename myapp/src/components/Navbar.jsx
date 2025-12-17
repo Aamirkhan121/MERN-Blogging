@@ -166,34 +166,77 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* MOBILE MENU */}
-      {menuOpen && user && (
-        <div className="md:hidden border-t bg-white">
-          <Link to="/" className="block px-4 py-2">Home</Link>
-          <Link to="/create-post" className="block px-4 py-2">Create</Link>
+     {/* Mobile Menu */}
+{menuOpen && (
+  <div className="md:hidden bg-white border-t border-gray-200">
+    <Link
+      to="/"
+      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+      onClick={() => setMenuOpen(false)}
+    >
+      Home
+    </Link>
 
-          {/* MOBILE INBOX */}
-          <div className="border-t">
-            {inbox.map((chat) => (
-              <Link
-                key={chat._id._id}
-                to={`/chat/${chat._id.username}`}
-                className="block px-4 py-2 border-b"
-                onClick={() => setMenuOpen(false)}
-              >
-                {chat._id.username}
-              </Link>
-            ))}
-          </div>
+    {user && (
+      <>
+        {/* Create Post */}
+        <Link
+          to="/create-post"
+          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          ➕ Create Post
+        </Link>
 
-          <button
-            onClick={handleLogout}
-            className="block w-full text-left px-4 py-2"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+        {/* Messages */}
+        <Link
+          to="/inbox"
+          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          💬 Messages
+        </Link>
+
+        {/* ✅ PROFILE – MUST */}
+        <Link
+          to="/profile"
+          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          👤 Profile
+        </Link>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+        >
+          🚪 Logout
+        </button>
+      </>
+    )}
+
+    {!user && (
+      <>
+        <Link
+          to="/login"
+          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          Login
+        </Link>
+        <Link
+          to="/register"
+          className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          Register
+        </Link>
+      </>
+    )}
+  </div>
+)}
+
     </nav>
   );
 }

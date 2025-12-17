@@ -41,10 +41,8 @@ export default function Inbox() {
       )}
 
       {chats.map((chat) => {
-        // Get the other user in the chat
-        const user = chat.members.find((m) => m._id !== currentUserId);
-        const isOnline = onlineUsers.includes(user._id);
-
+  const user = chat._id; // 👈 correct
+  const isOnline = onlineUsers.includes(user._id);
         return (
           <div
             key={user._id}
