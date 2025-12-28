@@ -1,3 +1,66 @@
 @import "tailwindcss";
 
 
+/* Glass / Mirror Text Effect */
+.glass-text-india-wave {
+  font-weight: bold;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  /* Sharp 3D effect without blur */
+  text-shadow:
+    2px 2px rgba(100, 98, 98, 0.25),
+    4px 4px rgba(127, 123, 123, 0.2),
+    6px 6px rgba(239, 183, 183, 0.15); 
+
+  /* Animated Indian flag colors */
+  background-image: linear-gradient(
+    90deg,
+    #FF9933 0%,   /* Saffron */
+    #FFFFFF 33%,  /* White */
+    #138808 66%,  /* Green */
+    #FF9933 100%
+  );
+  background-size: 300% 100%;
+  animation: flagWave 4s linear infinite;
+}
+
+@keyframes flagWave {
+  0% { background-position: 0% 0%; }
+  100% { background-position: -300% 0%; }
+}
+
+
+
+/* Wrapper for background only */
+.flag-bg-wave {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* ensures content stays on top */
+  pointer-events: none; /* background does not block clicks */
+
+  background: linear-gradient(
+    90deg,
+    #FF9933 0%,  /* Saffron */
+    #FFFFFF 33%, /* White */
+    #138808 66%, /* Green */
+    #FF9933 100%
+  );
+  background-size: 600% 200%;
+  animation: flagWave 8s ease-in-out infinite;
+}
+
+@keyframes flagWave {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 52%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 48%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+

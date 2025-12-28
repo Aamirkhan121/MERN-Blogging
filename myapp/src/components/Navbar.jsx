@@ -87,9 +87,11 @@ export default function Navbar() {
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2">
             <img src="/K_T_Logo.png" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-green-600">
-              K-Tech Blog
-            </span>
+       <span className="text-xl md:text-2xl glass-text-india-wave text-center my-10">
+  K-Tech Blog
+</span>
+
+
           </Link>
 
           {/* DESKTOP */}
