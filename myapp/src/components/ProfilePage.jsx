@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import axios from "../utils/instance";
 import { toast } from "react-toastify";
 
@@ -16,10 +16,6 @@ export default function ProfilePage() {
       try {
         const res = await axios.get(`/users/profile/${username}`);
         setUser(res.data.user);
-//         console.log(res.data.user)
-//         console.log("Username param:", username);
-// console.log("Logged user:", loggedUser);
-
       } catch (err) {
         toast.error(err.response?.data?.message || "User not found");
       } finally {
@@ -29,16 +25,12 @@ export default function ProfilePage() {
     fetchUser();
   }, [username]);
 
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
-  if (!user) return <p className="text-center mt-20">User not found</p>;
+  if (loading) return <p className="text-center mt-20 text-gray-500">Loading...</p>;
+  if (!user) return <p className="text-center mt-20 text-gray-500">User not found</p>;
 
   const isOwnProfile = loggedUser?._id === user._id;
+  const isFollowing = user.followers?.some(f => f._id === loggedUser?._id);
 
-  const isFollowing = user.followers?.some(
-    (f) => f._id === loggedUser?._id
-  );
-
-  // 🔹 Follow
   const handleFollow = async () => {
     try {
       setFollowLoading(true);
@@ -52,7 +44,6 @@ export default function ProfilePage() {
     }
   };
 
-  // 🔹 Unfollow
   const handleUnfollow = async () => {
     try {
       setFollowLoading(true);
@@ -67,73 +58,74 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      {/* PROFILE HEADER */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-6 bg-white shadow rounded-xl p-6 mb-8">
+    <div className="max-w-6xl mx-auto p-4 mb-20">
+      {/* ================= PROFILE HEADER ================= */}
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-6 bg-white shadow-2xl rounded-2xl p-8 mb-10 transition-all hover:shadow-xl">
+        {/* Profile Image */}
         <div className="relative">
           <img
             src={user.profilePic || "/default-profile.png"}
             alt={user.username}
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-green-500 shadow-lg"
+            className="w-36 h-36 md:w-44 md:h-44 rounded-full object-cover border-4 border-green-500 shadow-lg transition-transform hover:scale-105"
           />
         </div>
 
-        <div className="flex-1 flex flex-col md:justify-center gap-2">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl md:text-3xl font-bold">{user.username}</h1>
+        {/* Profile Info */}
+        <div className="flex-1 flex flex-col md:justify-center gap-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
+              {user.username}
+            </h1>
 
-          
-           {/* 🔥 FOLLOW / UNFOLLOW + MESSAGE */}
-{loggedUser && !isOwnProfile && (
-  <div className="flex gap-3">
-    <button
-      disabled={followLoading}
-      onClick={isFollowing ? handleUnfollow : handleFollow}
-      className={`px-5 py-2 rounded-md text-white font-medium ${
-        isFollowing
-          ? "bg-gray-500 hover:bg-gray-600"
-          : "bg-green-600 hover:bg-green-700"
-      }`}
-    >
-      {followLoading
-        ? "Please wait..."
-        : isFollowing
-        ? "Unfollow"
-        : "Follow"}
-    </button>
+            {loggedUser && !isOwnProfile && (
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  disabled={followLoading}
+                  onClick={isFollowing ? handleUnfollow : handleFollow}
+                  className={`px-6 py-2 rounded-lg font-semibold text-white transition-all duration-300 ${
+                    isFollowing
+                      ? "bg-gray-500 hover:bg-gray-600"
+                      : "bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800"
+                  }`}
+                >
+                  {followLoading
+                    ? "Please wait..."
+                    : isFollowing
+                    ? "Unfollow"
+                    : "Follow"}
+                </button>
 
-    {/* 💬 MESSAGE BUTTON */}
-    <button
-      onClick={() => navigate(`/chat/${user.username}`)}
-      className="px-5 py-2 rounded-md border border-gray-400 text-gray-700 hover:bg-gray-100 font-medium"
-    >
-      Message
-    </button>
-  </div>
-)}
-
+                <button
+                  onClick={() => navigate(`/chat/${user.username}`)}
+                  className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition"
+                >
+                  Message
+                </button>
+              </div>
+            )}
 
             {isOwnProfile && (
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
                 onClick={() => navigate("/profile")}
               >
                 Edit Profile
               </button>
             )}
           </div>
-          <p className="text-gray-600">{user.email}</p>
 
-          {/* FOLLOW INFO - optional */}
-          <div className="flex gap-4 mt-2 text-sm text-gray-700">
+          <p className="text-gray-600 text-sm md:text-base">{user.email}</p>
+
+          {/* Stats */}
+          <div className="flex gap-6 mt-4 text-gray-700 text-sm md:text-base font-medium">
             <span>
-              <strong>{user.followers?.length || 0}</strong> Followers
+              <strong className="text-gray-800">{user.followers?.length || 0}</strong> Followers
             </span>
             <span>
-              <strong>{user.following?.length || 0}</strong> Following
+              <strong className="text-gray-800">{user.following?.length || 0}</strong> Following
             </span>
             <span>
-              <strong>{user.posts?.length || 0}</strong> Posts
+              <strong className="text-gray-800">{user.posts?.length || 0}</strong> Posts
             </span>
           </div>
         </div>
@@ -141,21 +133,21 @@ export default function ProfilePage() {
 
       {/* ================= POSTS GRID ================= */}
       {user.posts?.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {user.posts.map((post) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {user.posts.map(post => (
             <div
               key={post._id}
-              className="relative group cursor-pointer"
+              className="relative group cursor-pointer overflow-hidden rounded-xl shadow hover:shadow-xl transition-shadow"
               onClick={() => navigate(`/post/${post.slug}`)}
             >
               <img
                 src={post.image}
                 alt={post.caption || post.title}
-                className="w-full h-48 md:h-56 object-cover rounded-lg group-hover:scale-105 transition-transform"
+                className="w-full h-48 md:h-56 lg:h-60 object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center text-white rounded-lg transition-opacity">
-                <p className="text-sm">{post.caption}</p>
-                <p className="mt-2 text-xs">
+              <div className="absolute inset-0 bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center text-white rounded-xl transition-opacity duration-300 px-2 text-center">
+                <p className="text-sm md:text-base truncate">{post.caption}</p>
+                <p className="mt-2 text-xs md:text-sm">
                   ❤️ {post.likes?.length || 0} &nbsp; 💬 {post.comments?.length || 0}
                 </p>
               </div>
@@ -163,7 +155,7 @@ export default function ProfilePage() {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500">No posts yet</p>
+        <p className="text-center text-gray-500 mt-10 text-lg">No posts yet</p>
       )}
     </div>
   );

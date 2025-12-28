@@ -71,7 +71,7 @@ export default function PostCard({ post, refreshPosts }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       layout
-      className="bg-white border rounded-xl shadow-sm mb-6"
+      className="bg-white border rounded-xl shadow-sm mb-20"
     >
       {/* HEADER */}
       <div className="flex justify-between items-center px-4 py-3">

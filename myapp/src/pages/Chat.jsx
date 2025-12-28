@@ -11,7 +11,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  
+
   useEffect(() => {
     const fetchReceiverAndMessages = async () => {
       try {
@@ -27,81 +27,98 @@ export default function Chat() {
     fetchReceiverAndMessages();
   }, [username]);
 
-  // Scroll to bottom
+  // Scroll to bottom smoothly
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Socket.io events
   useEffect(() => {
-  if (!receiver) return;
+    if (!receiver) return;
 
-  const myId = JSON.parse(localStorage.getItem("user"))._id;
+    const myId = user._id;
 
-  const handleNewMessage = (msg) => {
-    const senderId = msg.sender?._id || msg.sender;
-    const receiverId = msg.receiver?._id || msg.receiver;
+    const handleNewMessage = (msg) => {
+      const senderId = msg.sender?._id || msg.sender;
+      const receiverId = msg.receiver?._id || msg.receiver;
 
-    const isCurrentChat =
-      (senderId === myId && receiverId === receiver._id) ||
-      (senderId === receiver._id && receiverId === myId);
+      const isCurrentChat =
+        (senderId === myId && receiverId === receiver._id) ||
+        (senderId === receiver._id && receiverId === myId);
 
-    if (isCurrentChat) {
-      setMessages((prev) => [...prev, msg]);
-    }
-  };
+      if (isCurrentChat) setMessages((prev) => [...prev, msg]);
+    };
 
-  const handleTyping = (userId) => {
-    if (userId === receiver._id) setTyping(true);
-  };
+    const handleTyping = (userId) => {
+      if (userId === receiver._id) setTyping(true);
+    };
 
-  const handleStopTyping = () => setTyping(false);
+    const handleStopTyping = () => setTyping(false);
 
-  socket.on("newMessage", handleNewMessage);
-  socket.on("typing", handleTyping);
-  socket.on("stopTyping", handleStopTyping);
+    socket.on("newMessage", handleNewMessage);
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
 
-  return () => {
-    socket.off("newMessage", handleNewMessage);
-    socket.off("typing", handleTyping);
-    socket.off("stopTyping", handleStopTyping);
-  };
-}, [receiver]);
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
+    };
+  }, [receiver]);
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[80vh] border rounded shadow">
+    <div className="max-w-3xl mx-auto flex flex-col h-[80vh] border rounded-2xl shadow-lg overflow-hidden bg-white">
       {/* Header */}
-      <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="font-bold">{receiver?.username}</h2>
-        <span className="text-sm text-gray-500">
+      <div className="p-4 border-b flex justify-between items-center bg-gray-50 shadow-sm">
+        <h2 className="font-bold text-lg">{receiver?.username}</h2>
+        <span
+          className={`text-sm font-medium ${
+            receiver?.online ? "text-green-500" : "text-gray-400"
+          }`}
+        >
           {receiver?.online ? "Online" : "Offline"}
         </span>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-       {messages.map((m) => {
-  const senderId = m.sender?._id || m.sender;
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-gray-50">
+        {messages.map((m) => {
+          const senderId = m.sender?._id || m.sender;
+          const isMe = senderId === user._id;
+          return (
+            <div
+              key={m._id}
+              className={`p-3 rounded-2xl max-w-[70%] break-words shadow-sm transition-all duration-200 ${
+                isMe
+                  ? "self-end bg-gradient-to-r from-green-500 to-green-600 text-white"
+                  : "self-start bg-white text-gray-800 border"
+              }`}
+            >
+              {m.text}
+            </div>
+          );
+        })}
 
-  return (
-    <div
-      key={m._id}
-      className={`p-2 rounded max-w-[70%] ${
-        senderId === user._id
-          ? "self-end bg-green-500 text-white"
-          : "self-start bg-gray-200"
-      }`}
-    >
-      {m.text}
-    </div>
-  );
-})}
-        {typing && <p className="text-sm text-gray-500">Typing...</p>}
+        {/* Typing Indicator */}
+        {typing && (
+          <div className="self-start flex items-center gap-2">
+            <span className="text-gray-500 text-sm">Typing</span>
+            <span className="flex gap-1">
+              <span className="animate-bounce w-2 h-2 bg-gray-500 rounded-full"></span>
+              <span className="animate-bounce w-2 h-2 bg-gray-500 rounded-full delay-150"></span>
+              <span className="animate-bounce w-2 h-2 bg-gray-500 rounded-full delay-300"></span>
+            </span>
+          </div>
+        )}
+
         <div ref={messagesEndRef}></div>
       </div>
 
       {/* Input */}
-      <ChatInput receiver={receiver} />
+      <div className="p-4 border-t bg-gray-100">
+        <ChatInput receiver={receiver} />
+      </div>
     </div>
   );
 }
+

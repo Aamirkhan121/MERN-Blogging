@@ -24,7 +24,7 @@ export default function CreatePost() {
       const data = new FormData();
       data.append("title", form.title);
       data.append("caption", form.caption);
-      data.append("image", file); // send actual file
+      data.append("image", file);
 
       await axios.post("/posts/create", data, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -41,34 +41,54 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Create Post</h1>
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow-2xl rounded-2xl mt-10 mb-20">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Create a New Post</h1>
 
+      {/* Title Input */}
       <input
         name="title"
         value={form.title}
         onChange={handleChange}
         placeholder="Title"
-        className="w-full p-3 border rounded mb-4 outline-none"
+        className="w-full p-4 border rounded-xl mb-4 focus:ring-2 focus:ring-green-500 outline-none transition"
       />
 
+      {/* Caption Input */}
       <textarea
         name="caption"
         value={form.caption}
         onChange={handleChange}
-        placeholder="Caption"
-        className="w-full p-3 border rounded mb-4 outline-none"
+        placeholder="Write a caption..."
+        className="w-full p-4 border rounded-xl mb-4 focus:ring-2 focus:ring-green-500 outline-none transition"
         rows={5}
       />
 
-      <input type="file" onChange={handleFile} className="mb-4" />
+      {/* File Input */}
+      <input
+        type="file"
+        onChange={handleFile}
+        className="mb-4"
+        accept="image/*"
+      />
 
-      {file && <img src={URL.createObjectURL(file)} alt="preview" className="mb-4 max-h-60 rounded" />}
+      {/* Image Preview */}
+      {file && (
+        <img
+          src={URL.createObjectURL(file)}
+          alt="Preview"
+          className="mb-4 max-h-64 w-full object-cover rounded-xl shadow-lg"
+        />
+      )}
 
+      {/* Submit Button */}
       <button
         onClick={handleSubmit}
         disabled={loading || !file}
-        className={`w-full py-3 rounded text-white ${loading ? "bg-gray-500" : "bg-green-600 hover:bg-green-700"}`}
+        className={`w-full py-3 rounded-xl text-white font-semibold shadow-lg transition-all duration-300 ${
+          loading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800"
+        }`}
       >
         {loading ? "Posting..." : "Create Post"}
       </button>

@@ -195,74 +195,122 @@ export default function Navbar() {
       </div>
 
       {/* MOBILE MENU */}
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t">
+{menuOpen && (
+  <div className="md:hidden bg-white border-t">
+    
+    {/* 🔍 MOBILE SEARCH */}
+    <button
+      onClick={() => {
+        setMenuOpen(false);
+        navigate("/search");
+      }}
+      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+    >
+      <FaSearch />
+      <span>Search</span>
+    </button>
 
-          {/* 🔍 MOBILE SEARCH */}
-          <button
-            onClick={() => {
-              setMenuOpen(false);
-              navigate("/search");
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
-          >
-            <FaSearch />
-            <span>Search</span>
-          </button>
+    <Link
+      to="/"
+      className="block px-4 py-2 hover:bg-gray-100"
+      onClick={() => setMenuOpen(false)}
+    >
+      Home
+    </Link>
 
-          <Link
-            to="/"
-            className="block px-4 py-2 hover:bg-gray-100"
-            onClick={() => setMenuOpen(false)}
-          >
-            Home
-          </Link>
+    {user ? (
+      <>
+        <Link
+          to="/create-post"
+          className="block px-4 py-2 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          ➕ Create Post
+        </Link>
 
-          {user ? (
-            <>
-              <Link
-                to="/create-post"
-                className="block px-4 py-2 hover:bg-gray-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                ➕ Create Post
-              </Link>
-
-              <Link
-                to="/profile"
-                className="block px-4 py-2 hover:bg-gray-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                👤 Profile
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                🚪 Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="block px-4 py-2 hover:bg-gray-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="block px-4 py-2 hover:bg-gray-100"
-                onClick={() => setMenuOpen(false)}
-              >
-                Register
-              </Link>
-            </>
+        {/* 📥 MOBILE INBOX */}
+        <button
+          onClick={() => {
+            setInboxOpen(!inboxOpen);
+          }}
+          className="w-full flex justify-between items-center px-4 py-2 hover:bg-gray-100"
+        >
+          <span>Inbox</span>
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {unreadCount}
+            </span>
           )}
-        </div>
-      )}
+        </button>
+
+        {/* MOBILE INBOX DROPDOWN */}
+        {inboxOpen && (
+          <div className="bg-white border mt-1 rounded shadow-lg max-h-64 overflow-y-auto">
+            {inbox.length === 0 && (
+              <p className="p-4 text-gray-500">No messages</p>
+            )}
+            {inbox.map((chat) => (
+              <Link
+                key={chat._id._id}
+                to={`/chat/${chat._id.username}`}
+                onClick={() => {
+                  setInboxOpen(false);
+                  setMenuOpen(false);
+                  setUnreadCount(0);
+                }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+              >
+                <img
+                  src={chat._id.profilePic || "/default-avatar.png"}
+                  className="w-9 h-9 rounded-full"
+                />
+                <div className="flex-1">
+                  <p className="font-medium">{chat._id.username}</p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {chat.lastMessage.text}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <Link
+          to="/profile"
+          className="block px-4 py-2 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          👤 Profile
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+        >
+          🚪 Logout
+        </button>
+      </>
+    ) : (
+      <>
+        <Link
+          to="/login"
+          className="block px-4 py-2 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          Login
+        </Link>
+        <Link
+          to="/register"
+          className="block px-4 py-2 hover:bg-gray-100"
+          onClick={() => setMenuOpen(false)}
+        >
+          Register
+        </Link>
+      </>
+    )}
+  </div>
+)}
+
     </nav>
   );
 }

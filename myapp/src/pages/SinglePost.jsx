@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../utils/instance";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SinglePost() {
   const { slug } = useParams();
@@ -19,7 +20,6 @@ export default function SinglePost() {
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
 
-  /* ---------------- FETCH POST ---------------- */
   const fetchPost = async () => {
     try {
       const res = await axios.get(`/posts/${slug}`);
@@ -41,28 +41,23 @@ export default function SinglePost() {
   if (!post) return <p className="text-center mt-10">Post not found</p>;
 
   const isAuthor = user?._id === post.author?._id;
-  const isLiked = post.likes?.some(
-  (id) => id.toString() === user?._id
-);
+  const isLiked = post.likes?.some((id) => id.toString() === user?._id);
 
-/* ---------------- LIKE / UNLIKE ---------------- */
-const handleLike = async () => {
-  if (!user) return toast.error("Please login first");
+  /* ---------------- LIKE / UNLIKE ---------------- */
+  const handleLike = async () => {
+    if (!user) return toast.error("Please login first");
 
-  try {
-    setLikeLoading(true);
+    try {
+      setLikeLoading(true);
+      await axios.post(`/posts/${post.slug}/${isLiked ? "unlike" : "like"}`);
+      fetchPost();
+    } catch {
+      toast.error("Failed to update like");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
-    await axios.post(
-      `/posts/${post.slug}/${isLiked ? "unlike" : "like"}`
-    );
-
-    fetchPost();
-  } catch {
-    toast.error("Failed to update like");
-  } finally {
-    setLikeLoading(false);
-  }
-};
   /* ---------------- ADD COMMENT ---------------- */
   const handleComment = async () => {
     if (!comment.trim()) return;
@@ -72,11 +67,7 @@ const handleLike = async () => {
       await axios.post(
         `/posts/${post.slug}/comment`,
         { text: comment },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       setComment("");
       fetchPost();
@@ -91,9 +82,7 @@ const handleLike = async () => {
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`/posts/${post.slug}/comment/${commentId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchPost();
     } catch {
@@ -101,23 +90,16 @@ const handleLike = async () => {
     }
   };
 
-  /* ---------------- UPDATE POST (SLUG) ---------------- */
+  /* ---------------- UPDATE POST ---------------- */
   const handleUpdate = async () => {
     try {
       const res = await axios.put(
         `/posts/update/${post.slug}`,
         { title, caption },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-
       toast.success("Post updated");
       setEditMode(false);
-
-      // slug change ho sakta hai → redirect
       navigate(`/post/${res.data.post.slug}`);
     } catch {
       toast.error("Failed to update post");
@@ -125,16 +107,9 @@ const handleLike = async () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-
+    <div className="max-w-3xl mx-auto px-4 py-6 mb-20">
       {/* IMAGE */}
-      {post.image && (
-        <img
-          src={post.image}
-          alt={post.title}
-          className="w-full rounded-xl mb-6"
-        />
-      )}
+      {post.image && <img src={post.image} alt={post.title} className="w-full rounded-xl mb-6" />}
 
       {/* TITLE */}
       {editMode ? (
@@ -147,9 +122,7 @@ const handleLike = async () => {
         <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
       )}
 
-      <p className="text-gray-500 text-sm mb-4">
-        By {post.author?.username}
-      </p>
+      <p className="text-gray-500 text-sm mb-4">By {post.author?.username}</p>
 
       {/* CAPTION */}
       {editMode ? (
@@ -167,17 +140,11 @@ const handleLike = async () => {
       {isAuthor && (
         <div className="mb-4">
           {editMode ? (
-            <button
-              onClick={handleUpdate}
-              className="bg-green-600 text-white px-4 py-1 rounded mr-2"
-            >
+            <button onClick={handleUpdate} className="bg-green-600 text-white px-4 py-1 rounded mr-2">
               Save
             </button>
           ) : (
-            <button
-              onClick={() => setEditMode(true)}
-              className="bg-blue-600 text-white px-4 py-1 rounded"
-            >
+            <button onClick={() => setEditMode(true)} className="bg-blue-600 text-white px-4 py-1 rounded">
               Edit Post
             </button>
           )}
@@ -185,44 +152,53 @@ const handleLike = async () => {
       )}
 
       {/* LIKE */}
-      <button
-        onClick={handleLike}
-        disabled={likeLoading}
-        className={`mb-4 ${
-          isLiked ? "text-red-500" : "text-gray-600"
-        }`}
-      >
-        ❤️ {post.likes?.length || 0}
-      </button>
+    <motion.button
+  onClick={handleLike}
+  disabled={likeLoading}
+  whileTap={{ scale: 1.3 }}
+  className="mb-4 text-2xl"
+>
+  <motion.span
+    key={isLiked ? "liked" : "unliked"} // re-render animation
+    initial={{ scale: 0 }}
+    animate={{ scale: 1 }}
+    exit={{ scale: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+  >
+    {isLiked ? "❤️" : "🤍"} {post.likes?.length || 0}
+  </motion.span>
+</motion.button>
 
       {/* COMMENTS */}
       <div className="mt-4">
-        <h3 className="font-semibold mb-2">
-          Comments ({post.comments?.length || 0})
-        </h3>
+        <h3 className="font-semibold mb-2">Comments ({post.comments?.length || 0})</h3>
 
-        {post.comments?.map((c) => (
-          <div
-            key={c._id}
-            className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded mb-1"
-          >
-            <p>
-              <span className="font-semibold">
-                {c.user?.username}:
-              </span>{" "}
-              {c.text}
-            </p>
+        <AnimatePresence>
+          {post.comments?.map((c) => (
+            <motion.div
+              key={c._id}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.2 }}
+              className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded mb-1"
+            >
+              <p>
+                <span className="font-semibold">{c.user?.username}:</span> {c.text}
+              </p>
 
-            {user?._id === c.user?._id && (
-              <button
-                onClick={() => handleDeleteComment(c._id)}
-                className="text-red-500 text-xs"
-              >
-                Delete
-              </button>
-            )}
-          </div>
-        ))}
+              {user?._id === c.user?._id && (
+                <motion.button
+                  onClick={() => handleDeleteComment(c._id)}
+                  whileTap={{ scale: 1.2 }}
+                  className="text-red-500 text-xs"
+                >
+                  Delete
+                </motion.button>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* ADD COMMENT */}
@@ -236,13 +212,14 @@ const handleLike = async () => {
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleComment()}
           />
-          <button
+          <motion.button
             onClick={handleComment}
             disabled={commentLoading}
+            whileTap={{ scale: 1.1 }}
             className="bg-blue-600 text-white px-4 rounded-r"
           >
             {commentLoading ? "..." : "Post"}
-          </button>
+          </motion.button>
         </div>
       )}
     </div>
