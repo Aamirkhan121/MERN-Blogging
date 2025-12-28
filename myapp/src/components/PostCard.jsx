@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "../utils/instance";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostCard({ post, refreshPosts }) {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function PostCard({ post, refreshPosts }) {
   const [showComments, setShowComments] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [commentLoading, setCommentLoading] = useState(false);
+  const [animateLike, setAnimateLike] = useState(false);
 
   const isLiked = post.likes?.some((id) => id.toString() === user?._id);
 
@@ -20,6 +22,8 @@ export default function PostCard({ post, refreshPosts }) {
       setLikeLoading(true);
       await axios.post(`/posts/${post.slug}/${isLiked ? "unlike" : "like"}`);
       refreshPosts();
+      setAnimateLike(true); // trigger heart animation
+      setTimeout(() => setAnimateLike(false), 500);
     } catch {
       toast.error("Failed to update like");
     } finally {
@@ -62,8 +66,13 @@ export default function PostCard({ post, refreshPosts }) {
   };
 
   return (
-    <div className="bg-white border rounded-xl shadow-sm mb-6">
-
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      layout
+      className="bg-white border rounded-xl shadow-sm mb-6"
+    >
       {/* HEADER */}
       <div className="flex justify-between items-center px-4 py-3">
         <div
@@ -84,28 +93,58 @@ export default function PostCard({ post, refreshPosts }) {
 
       {/* IMAGE */}
       {post.image && (
-        <img
+        <motion.img
           src={post.image}
           alt={post.title}
           onDoubleClick={handleDoubleClick}
           onClick={() => navigate(`/post/${post.slug}`)}
           className="w-full max-h-[420px] object-cover cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.3 }}
         />
       )}
 
       {/* ACTIONS */}
       <div className="flex items-center gap-5 px-4 py-2 text-lg">
-        <button onClick={handleLike} disabled={likeLoading}>
+        <motion.button
+          onClick={handleLike}
+          disabled={likeLoading}
+          whileTap={{ scale: 1.3 }}
+          className="relative"
+        >
           {isLiked ? "❤️" : "🤍"}
-        </button>
+          {animateLike && (
+            <motion.span
+              key="like-animation"
+              initial={{ scale: 0, opacity: 1 }}
+              animate={{ scale: 2, opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="absolute left-0 top-0 text-red-500 text-xl"
+            >
+              ❤️
+            </motion.span>
+          )}
+        </motion.button>
         <button onClick={() => setShowComments(!showComments)}>💬</button>
       </div>
 
       {/* LIKE TEXT */}
-      {likeText() && <p className="px-4 text-sm font-semibold">{likeText()}</p>}
+      {likeText() && (
+        <motion.p
+          className="px-4 text-sm font-semibold"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {likeText()}
+        </motion.p>
+      )}
 
       {/* CAPTION */}
-      <p className="px-4 text-sm mt-1">
+      <motion.p
+        className="px-4 text-sm mt-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         <span
           className="font-semibold mr-1 cursor-pointer"
           onClick={() => navigate(`/profile/${post.author?.username}`)}
@@ -113,7 +152,7 @@ export default function PostCard({ post, refreshPosts }) {
           {post.author?.username}
         </span>
         {post.content}
-      </p>
+      </motion.p>
 
       {/* VIEW COMMENTS */}
       {post.comments?.length > 0 && !showComments && (
@@ -126,35 +165,50 @@ export default function PostCard({ post, refreshPosts }) {
       )}
 
       {/* COMMENTS */}
-      {showComments && (
-        <div className="px-4 mt-2 space-y-2 max-h-40 overflow-y-auto">
-          {post.comments.map((c) => (
-            <div key={c._id} className="flex items-start justify-between text-sm gap-2">
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => navigate(`/profile/${c.user?.username}`)}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            className="px-4 mt-2 space-y-2 max-h-40 overflow-y-auto"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {post.comments.map((c) => (
+              <motion.div
+                key={c._id}
+                className="flex items-start justify-between text-sm gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                layout
               >
-                <img
-                  src={c.user?.profilePic || "/default-avatar.png"}
-                  alt={c.user?.username}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-                <p>
-                  <span className="font-semibold">{c.user?.username}</span> {c.text}
-                </p>
-              </div>
-              {user?._id === c.user?._id && (
-                <button
-                  onClick={() => handleDeleteComment(c._id)}
-                  className="text-red-500 text-xs"
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => navigate(`/profile/${c.user?.username}`)}
                 >
-                  Delete
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                  <img
+                    src={c.user?.profilePic || "/default-avatar.png"}
+                    alt={c.user?.username}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                  <p>
+                    <span className="font-semibold">{c.user?.username}</span>{" "}
+                    {c.text}
+                  </p>
+                </div>
+                {user?._id === c.user?._id && (
+                  <button
+                    onClick={() => handleDeleteComment(c._id)}
+                    className="text-red-500 text-xs"
+                  >
+                    Delete
+                  </button>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ADD COMMENT */}
       {user && (
@@ -167,15 +221,16 @@ export default function PostCard({ post, refreshPosts }) {
             onChange={(e) => setComment(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleComment()}
           />
-          <button
+          <motion.button
             onClick={handleComment}
             disabled={commentLoading}
+            whileTap={{ scale: 1.2 }}
             className="text-blue-600 font-semibold text-sm"
           >
             Post
-          </button>
+          </motion.button>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

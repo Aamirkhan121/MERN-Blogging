@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiPlusSquare, FiMessageSquare } from "react-icons/fi";
 import socket from "../socket";
 import axios from "../utils/instance";
+import { motion } from "framer-motion";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -19,6 +20,11 @@ export default function Navbar() {
     navigate("/login");
   };
 
+//   useEffect(() => {
+//   const close = () => setMenuOpen(false);
+//   window.addEventListener("click", close);
+//   return () => window.removeEventListener("click", close);
+// }, []);
   /* ================= FETCH INBOX ================= */
   useEffect(() => {
     if (!user) return;
@@ -70,6 +76,8 @@ export default function Navbar() {
     socket.on("newMessage", handleNewMessage);
     return () => socket.off("newMessage", handleNewMessage);
   }, [user]);
+
+
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -152,6 +160,37 @@ export default function Navbar() {
                     className="w-8 h-8 rounded-full"
                   />
                 </button>
+
+ {/* 🔽 DESKTOP PROFILE DROPDOWN */}
+  {menuOpen && (
+    <motion.div
+    className="
+      absolute right-[60px]  mt-20 w-40
+      bg-white border rounded-lg shadow-lg
+      origin-top-right
+    "
+    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+  animate={{ opacity: 1, scale: 1, y: 0 }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  transition={{ duration: 0.2 }}
+
+  >
+      <Link
+        to="/profile"
+        className="block px-4 py-2 hover:bg-gray-100"
+        onClick={() => setMenuOpen(false)}
+      >
+        👤 Profile
+      </Link>
+
+      <button
+        onClick={handleLogout}
+        className="w-full text-left px-4 py-2 hover:bg-gray-100"
+      >
+        🚪 Logout
+      </button>
+    </motion.div>
+  )}
               </>
             )}
           </div>
