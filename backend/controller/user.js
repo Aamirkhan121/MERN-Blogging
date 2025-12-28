@@ -246,3 +246,24 @@ exports.unfollowUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+// GET /api/users/search?query=someText
+exports.searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) return res.json([]);
+
+    const users = await User.find({
+      username: { $regex: `^${query}`, $options: "i" }
+    })
+      .select("username profilePic")
+      .limit(10)
+      .lean(); // ⚡ faster
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Search failed" });
+  }
+};

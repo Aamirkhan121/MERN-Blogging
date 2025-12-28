@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/ProtectRoute";
 import Footer from "./components/Footer";
 import Inbox from "./pages/Inbox";
 import Chat from "./pages/Chat";
+import UsernameSearch from "./components/UsernameSearch";
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/post/:slug" element={<ProtectedRoute> <SinglePost /> </ProtectedRoute> } />
         <Route path="/profile/:username" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute> } />
         <Route path="/inbox" element={<Inbox />} />
+        <Route path="/search" element={<UsernameSearch />} />
         <Route path="/chat/:username" element={<Chat />} />
 
       </Routes>
