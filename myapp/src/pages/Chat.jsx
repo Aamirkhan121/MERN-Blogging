@@ -10,6 +10,7 @@ export default function Chat() {
   const [receiver, setReceiver] = useState(null);
   const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -31,6 +32,17 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+  socket.on("onlineUsers", (users) => {
+    setOnlineUsers(users);
+  });
+
+  return () => {
+    socket.off("onlineUsers");
+  };
+}, []);
+
 
   // Socket.io events
   useEffect(() => {
@@ -66,18 +78,21 @@ export default function Chat() {
     };
   }, [receiver]);
 
+  const isOnline = onlineUsers.includes(receiver?._id);
+
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[80vh] border rounded-2xl shadow-lg overflow-hidden bg-white">
       {/* Header */}
       <div className="p-4 border-b flex justify-between items-center bg-gray-50 shadow-sm">
         <h2 className="font-bold text-lg">{receiver?.username}</h2>
         <span
-          className={`text-sm font-medium ${
-            receiver?.online ? "text-green-500" : "text-gray-400"
-          }`}
-        >
-          {receiver?.online ? "Online" : "Offline"}
-        </span>
+  className={`text-sm font-medium ${
+    isOnline ? "text-green-500" : "text-gray-400"
+  }`}
+>
+  {isOnline ? "Online" : "Offline"}
+</span>
+
       </div>
 
       {/* Messages */}
