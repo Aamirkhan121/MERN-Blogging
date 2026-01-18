@@ -117,16 +117,15 @@ export default function Navbar() {
                       )}
 
                       {inbox.map((chat) => (
-                      <Link
-  to={`/chat/${chat._id.username}`}
-  onClick={(e) => {
-    e.preventDefault();
-    setInboxOpen(false);
-    setUnreadCount(0);
-    window.history.pushState({}, "", `/chat/${chat._id.username}`);
-  }}
-  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
->
+                        <Link
+                          key={chat._id._id}
+                          to={`/chat/${chat._id.username}`}
+                          onClick={() => {
+                            setInboxOpen(false);
+                            setUnreadCount(0);
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+                        >
                           <img
                             src={chat._id.profilePic || "/default-avatar.png"}
                             className="w-9 h-9 rounded-full"
