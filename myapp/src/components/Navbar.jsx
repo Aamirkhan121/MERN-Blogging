@@ -111,21 +111,22 @@ export default function Navbar() {
                   </button>
 
                   {inboxOpen && (
-                    <div className="absolute right-0 mt-2 w-72 bg-white border rounded shadow-lg max-h-80 overflow-y-auto">
+                    <div className="absolute right-0 mt-2 w-72 bg-white border rounded shadow-lg max-h-80 overflow-y-auto overscroll-contain">
                       {inbox.length === 0 && (
                         <p className="p-4 text-gray-500">No messages</p>
                       )}
 
                       {inbox.map((chat) => (
-                        <Link
-                          key={chat._id._id}
-                          to={`/chat/${chat._id.username}`}
-                          onClick={() => {
-                            setInboxOpen(false);
-                            setUnreadCount(0);
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
-                        >
+                      <Link
+  to={`/chat/${chat._id.username}`}
+  onClick={(e) => {
+    e.preventDefault();
+    setInboxOpen(false);
+    setUnreadCount(0);
+    window.history.pushState({}, "", `/chat/${chat._id.username}`);
+  }}
+  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100"
+>
                           <img
                             src={chat._id.profilePic || "/default-avatar.png"}
                             className="w-9 h-9 rounded-full"
