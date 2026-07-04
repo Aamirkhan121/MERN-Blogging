@@ -114,7 +114,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <p className="text-gray-600 text-sm md:text-base">{user.email}</p>
+          <p className="text-gray-600 text-sm md:text-base">{user.username}</p>
 
           {/* Stats */}
           <div className="flex gap-6 mt-4 text-gray-700 text-sm md:text-base font-medium">
